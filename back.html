@@ -16,8 +16,8 @@
   <link rel="apple-touch-icon" href="./assets/images/emoji_0.png" />
   <link rel="apple-touch-icon-precomposed" href="./assets/images/emoji_0.png">
   <link rel="Bookmark" href="./assets/images/emoji_0.png" />
-  <link rel="Bookmark" href="./assets/images/emoji_0.png" />
-  <link rel="stylesheet" type="text/css" href="./assets/styles/index.css" /> -->
+  <link rel="Bookmark" href="./assets/images/emoji_0.png" /> -->
+  <link rel="stylesheet" type="text/css" href="./assets/styles/index.css" />
   <script src="./assets/libs/three.min.js"></script>
   <!-- <script src="./assets/libs/GLTFLoader.js"></script> -->
   <script>
@@ -138,19 +138,20 @@
           });
           mesh.material = inside;
         });
-        loadMarker('inside');
+        loadMarker('room2');
       }
+      
       renderer.render(scene, camera);
     }
 
     // 加载交互点
     function loadMarker(type) {
       var interactPoints = [
-        // { name: 'point_0_outside_house', scale: 2, x: 0, y: 1.5, z: 24 },
-        // { name: 'point_1_outside_car', scale: 3, x: 40, y: 1, z: -20 },
-        // { name: 'point_2_outside_people', scale: 3, x: -20, y: 1, z: -30 },
-        // { name: 'point_3_inside_eating_room', scale: 2, x: -30, y: 1, z: 20 },
-        // { name: 'point_4_inside_bed_room', scale: 3, x: 48, y: 0, z: -20 }
+        { name: 'point_0_room1_house', scale: 2, x: 0, y: -16, z: 20 },
+        // { name: 'point_1_room1_car', scale: 3, x: 40, y: 1, z: -20 },
+        // { name: 'point_2_room1_people', scale: 3, x: -20, y: 1, z: -30 },
+        // { name: 'point_3_room2_eating_room', scale: 2, x: -30, y: 1, z: 20 },
+        // { name: 'point_4_room2_bed_room', scale: 3, x: 48, y: 0, z: -20 }
       ];
       // 移除marker
       for (let i = scene.children.length - 1; i >= 0; i--) {
@@ -209,8 +210,8 @@
         if(name=="into-room-1"){
           camera_time = 1;
         }
-        else if(name==''){
-
+        else if(name=='point_0_room1_house'){
+          camera_time = 1;
         }
       }
       // if (intersects.length > 0) {

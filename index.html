@@ -5,6 +5,7 @@
   <meta http-equiv="X-UA-Compatible" content="IE=edge">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Between the World and Us—A Think! Contemporary Primary School Virtual Exhibition | Singapore Art Museum</title>
+  <link rel="stylesheet" type="text/css" href="./assets/styles/index.css" />
   <script src="./assets/libs/three.min.js"></script>
 </head>
 <body>
@@ -17,18 +18,305 @@
     // 球体网格
     var geometry;
     // 四个全景图
-    var people_room, outside_low, inside, inside_low;
+    var people_room, room1_side, room2_side,room3_side,room4_side;
     // 全景球体对象
     var mesh;
     // 摄像机移动参数
+    var canvas_step;
     var camera_time = 0;
     var interactMeshes = [];
     var anchorMeshes = [];
-    var people_room_text_tips = [];
-    var hope_room_text_tips = [];
-    var stories_room_text_tips = [];
-    var spaces_room_text_tips = [];
+    var stories_room_text_tips = [];//room1 finished
+    var spaces_room_text_tips = [];//room2 finished
+    var people_room_text_tips = [];//room3 finished
+    var hope_room_text_tips = [];//room4 finished
 
+    init();
+    animate();
+    function init() {
+      var container;
+      container = document.getElementById('container');
+      // 摄像机
+      camera = new THREE.PerspectiveCamera(90, window.innerWidth / window.innerHeight, 1, 1100);
+      camera.target = new THREE.Vector3(0, 0, 0);
+      scene = new THREE.Scene();
+      // 添加灯光
+      light = new THREE.HemisphereLight(0xffffff);
+      light.position.set(0, 40, 0);
+      scene.add(light);
+      light = new THREE.DirectionalLight(0xffffff);
+      light.position.set(0, 40, -10);
+      scene.add(light);
+      // 全景场景
+      geometry = new THREE.SphereGeometry(500, 60, 60);
+      // 按z轴翻转
+      geometry.scale(1, 1, -1);
+      // 添加贴图
+      room1_side = new THREE.MeshBasicMaterial({
+        //文小芳
+        map: new THREE.TextureLoader().load('./assets/images/room-1.jpg')
+      });
+      room2_side = new THREE.MeshBasicMaterial({
+        map: new THREE.TextureLoader().load('./assets/images/room-2.jpg')
+      });
+      room3_side = new THREE.MeshBasicMaterial({
+        map: new THREE.TextureLoader().load('./assets/images/room-3.jpg')
+      });
+      room4_side = new THREE.MeshBasicMaterial({
+        map: new THREE.TextureLoader().load('./assets/images/room-4.jpg')
+      });
+      mesh = new THREE.Mesh(geometry, room1_side);
+      loadMarker('stories');
+      scene.add(mesh);
+      renderer = new THREE.WebGLRenderer();
+      renderer.setPixelRatio(window.devicePixelRatio);
+      renderer.setSize(window.innerWidth, window.innerHeight);
+      container.appendChild(renderer.domElement);
+      document.addEventListener('mousedown', onDocumentMouseDown, false);
+      document.addEventListener('mousemove', onDocumentMouseMove, false);
+      document.addEventListener('mouseup', onDocumentMouseUp, false);
+      document.addEventListener('touchstart', onDocumentTouchDown, false);
+      document.addEventListener('touchmove', onDocumentTouchMove, false);
+      document.addEventListener('touchend', onDocumentMouseUp, false);
+      window.addEventListener('resize', onWindowResize, false);
+    }
+
+    function onWindowResize() {
+      camera.aspect = window.innerWidth / window.innerHeight;
+      camera.updateProjectionMatrix();
+      renderer.setSize(window.innerWidth, window.innerHeight);
+    }
+
+    // 鼠标控制
+    function onDocumentMouseDown(event) {
+      if(camera.fov!=90){
+        camera.fov = 90;
+        camera.updateProjectionMatrix();
+      }
+      raycaster.setFromCamera(mouse, camera);
+      var intersects = raycaster.intersectObjects(interactMeshes);
+      console.log("intersects===",intersects);
+      if(intersects.length > 0){
+        let name = intersects[0].object.name;
+        console.log("name===",name);
+        if(name=='stories_people_text'){
+          camera_time = 1;
+          canvas_step = 'stories_people';
+        }
+        else if(name=='stories_spaces_text'){
+          camera_time = 1;
+          canvas_step = 'stories_spaces';
+        }
+        else if(name=='people_stories_text'){
+          camera_time = 1;
+          canvas_step = 'people_stories';
+        }
+        else if(name=='people_hope_text'){
+          camera_time = 1;
+          canvas_step = 'people_hope';
+        }
+        else if(name=='spaces_hope_text'){
+          camera_time = 1;
+          canvas_step = 'spaces_hope';
+        }
+        else if(name=='spaces_stories_text'){
+          camera_time = 1;
+          canvas_step = 'spaces_stories';
+        }
+        else if(name=='hope_people_text'){
+          camera_time = 1;
+          canvas_step = 'hope_people';
+        }
+        else if(name=='hope_spaces_text'){
+          camera_time = 1;
+          canvas_step = 'hope_spaces';
+        }
+        else if(name=='between_the_world_and_us'){
+          canvas_step = 'detail_text';
+          camera_time = 1;
+        }
+      }
+      isUserInteracting = true;
+      onPointerDownPointerX = event.clientX;
+      onPointerDownPointerY = event.clientY;
+      onPointerDownLon = lon;
+      onPointerDownLat = lat;
+    }
+
+    function onDocumentTouchDown(event) {
+      isUserInteracting = true;
+      onPointerDownPointerX = event.touches[0].pageX;
+      onPointerDownPointerY = event.touches[0].pageY;
+      onPointerDownLon = lon;
+      onPointerDownLat = lat;
+    }
+
+    function onDocumentMouseMove(event) {
+      mouse.x = (event.clientX / window.innerWidth) * 2 - 1;
+      mouse.y = -(event.clientY / window.innerHeight) * 2 + 1;
+      if (isUserInteracting === true) {
+        lon = (onPointerDownPointerX - event.clientX) * 0.1 + onPointerDownLon;
+        lat = (event.clientY - onPointerDownPointerY) * 0.1 + onPointerDownLat;
+      }
+    }
+
+    function onDocumentTouchMove(event) {
+      if (isUserInteracting === true) {
+        lon = (onPointerDownPointerX - event.touches[0].pageX) * 0.1 + onPointerDownLon;
+        lat = (event.touches[0].pageY - onPointerDownPointerY) * 0.1 + onPointerDownLat;
+      }
+    }
+
+    function onDocumentMouseUp(event) {
+      isUserInteracting = false;
+    }
+
+    function onDocumentMouseWheel(event) {
+      // camera.fov += event.deltaY * 0.05;
+      // camera.updateProjectionMatrix();
+    }
+
+    function animate() {
+      requestAnimationFrame(animate);
+      update();
+      anchorMeshes.map(item => {
+        item.rotation.y += 0.02;
+      });
+    }
+
+    //捕捉鼠标
+    function update() {
+      lat = Math.max(- 85, Math.min(85, lat));
+      phi = THREE.Math.degToRad(90 - lat);
+      theta = THREE.Math.degToRad(lon);
+      camera.target.x = 500 * Math.sin(phi) * Math.cos(theta);
+      camera.target.y = 500 * Math.cos(phi);
+      camera.target.z = 500 * Math.sin(phi) * Math.sin(theta);
+
+      if (camera_time > 0 && camera_time < 30) {
+        camera.fov -= 1;
+        camera.updateProjectionMatrix();
+        camera_time++;
+      } else if (camera_time === 30) {
+        camera_time = 0;
+        if(canvas_step!='detail_text'){
+          camera_time = 0;
+          camera.fov = 90;
+          camera.updateProjectionMatrix();
+        }
+        if(canvas_step=='stories_people'){
+          mesh.material = room3_side;
+          loadMarker('people');
+          //这里改变 camera.target 无效 因为上面会修改过来
+          // lat = 0;
+          // lon = -44;
+          // camera.target.x = 500 * Math.sin(phi) * Math.cos(theta);
+          // camera.target.y = 500 * Math.cos(phi);
+          // camera.target.z = 500 * Math.sin(phi) * Math.sin(theta);
+          // camera.target.x = 30;
+          // camera.target.y = 30;
+          // camera.target.z = 0;
+        }
+        else if(canvas_step=='stories_spaces'){
+          mesh.material = room2_side;
+          loadMarker('spaces');
+        }
+        else if(canvas_step=='people_stories'){
+          mesh.material = room1_side;
+          loadMarker('stories');
+        }
+        else if(canvas_step == 'people_hope'){
+          mesh.material = room4_side;
+          loadMarker('hope');
+        }
+        else if(canvas_step=='spaces_hope'){
+          mesh.material = room4_side;
+          loadMarker('hope');
+        }
+        else if(canvas_step=='spaces_stories'){
+          mesh.material = room1_side;
+          loadMarker('stories');
+        }
+        else if(canvas_step=='hope_people'){
+          mesh.material = room3_side;
+          loadMarker('people');
+        }
+        else if(canvas_step=='hope_spaces'){
+          mesh.material = room2_side;
+          loadMarker('spaces');
+        }
+        camera.updateProjectionMatrix();
+      }
+      console.log("camera.target",camera.target);
+      camera.lookAt(camera.target);
+      renderer.render(scene, camera);
+    }
+
+    // 加载交互点
+    function loadMarker(type) {
+      var interactPoints = [
+        { name: 'stories_people_text',type:'stories', scale:16, x: 44, y:1, z: -20 },
+        { name: 'stories_spaces_text',type:'stories', scale:9, x: -21, y:1, z: -20 },
+        { name: 'between_the_world_and_us',type:'stories', scale: 2, x: 0, y: -16, z: 20 },
+        { name: 'people_stories_text',type:'people', scale: 10, x: -21, y: 1, z: 20 },
+        { name: 'people_hope_text',type:'people', scale: 6, x: -6, y: 0, z: 20 },
+        { name: 'spaces_stories_text',type:'spaces', scale:6, x: -7, y:1, z: -20 },
+        { name: 'spaces_hope_text',type:'spaces', scale:16, x:-36, y:1, z:20 },
+        { name: 'hope_people_text',type:'hope', scale: 10, x: -18, y: 1, z: 20 },
+        { name: 'hope_spaces_text',type:'hope',scale:6, x: 2, y:1, z: -20 }
+      ];
+      //文小芳
+      interactPoints = interactPoints.filter(item => item.type.includes(type));
+      var nameArr = [];
+      interactPoints.map((item)=>{
+        nameArr.push(item.name);
+      })
+      // 移除marker
+      for (let i = scene.children.length - 1; i >= 0; i--) {
+        console.log('scene.children[i].name',scene.children[i].name);
+        if(scene.children[i].name&&nameArr.indexOf(scene.children[i].name)==-1){
+          scene.remove(scene.children[i]);
+        }
+      }
+      // 添加问号标记点
+      var pointTexture;
+      interactPoints.map(item => {
+        if(item.name=='stories_people_text'){
+          pointTexture = new THREE.TextureLoader().load('./assets/images/icon-text-people.png');
+        }
+        else if(item.name=='stories_spaces_text'){
+          pointTexture = new THREE.TextureLoader().load('./assets/images/icon-text-spaces.png');
+        }
+        else if(item.name=='people_stories_text'){
+          pointTexture = new THREE.TextureLoader().load('./assets/images/icon-text-stories.png');
+        }
+        else if(item.name=='people_hope_text'){
+          pointTexture = new THREE.TextureLoader().load('./assets/images/icon-text-hope.png');
+        }
+        else if(item.name=='spaces_stories_text'){
+          pointTexture = new THREE.TextureLoader().load('./assets/images/icon-text-stories.png');
+        }
+        else if(item.name=='spaces_hope_text'){
+          pointTexture = new THREE.TextureLoader().load('./assets/images/icon-text-hope.png');
+        }
+        else if(item.name=='hope_people_text'){
+          pointTexture = new THREE.TextureLoader().load('./assets/images/icon-text-people.png');
+        }
+        else if(item.name=='hope_spaces_text'){
+          pointTexture = new THREE.TextureLoader().load('./assets/images/icon-text-spaces.png');
+        }
+        else{
+          pointTexture = new THREE.TextureLoader().load('./assets/images/icon-zoom.png');
+        }
+        var pointMaterial = new THREE.SpriteMaterial({ map: pointTexture });
+        let point = new THREE.Sprite(pointMaterial);
+        point.name = item.name;
+        point.scale.set(item.scale, item.scale, item.scale);
+        point.position.set(item.x, item.y, item.z);
+        interactMeshes.push(point);
+        scene.add(point);
+      });
+    }
   </script>
 </body>
 </html>
