@@ -10,6 +10,7 @@
 </head>
 <body>
   <div id="container"></div>
+  <div id="backbtn" class="hide">Return</div>
   <script type="text/javascript">
     var camera, scene, renderer, light;
     var raycaster = new THREE.Raycaster();
@@ -33,6 +34,21 @@
     var people_room_text_tips = [];//room3 finished
     var hope_room_text_tips = [];//room4 finished
 
+    var backbtn = document.getElementById("backbtn");
+
+    backbtn.addEventListener("click",()=>{
+      camera_time = 0;
+      camera.fov = 90;
+      useTarget = true;
+      camera.updateProjectionMatrix();
+      backbtn.classList.add("hide");
+      // if(camera.fov!=90){
+      //   console.log("useTarget",useTarget);
+      //   useTarget = true;
+      //   camera.fov = 90;
+      //   camera.updateProjectionMatrix();
+      // }
+    })
     init();
     animate();
     function init() {
@@ -94,11 +110,15 @@
 
     // 鼠标控制
     function onDocumentMouseDown(event) {
-      if(camera.fov!=90){
-        useTarget = true;
-        camera.fov = 90;
-        camera.updateProjectionMatrix();
-      }
+      // if(camera.fov!=90){
+      //   console.log("useTarget",useTarget);
+      //   useTarget = true;
+      //   camera.fov = 90;
+      //   camera.updateProjectionMatrix();
+      // }
+      // if(useTarget == false){
+      //   useTarget = true;
+      // }
       raycaster.setFromCamera(mouse, camera);
       var intersects = raycaster.intersectObjects(interactMeshes);
       // console.log("intersects===",intersects);
@@ -106,7 +126,7 @@
         let name = intersects[0].object.name;
         // console.log("name===",name);
         if(name=='stories_people_text'){
-          // useTarget = true;
+          // useTarget = false;
           camera_time = 1;
           canvas_step = 'stories_people';
         }
@@ -146,9 +166,53 @@
           canvas_step = 'hope_spaces';
         }
         else if(name=='between_the_world_and_us'){
-          useTarget = false;
           canvas_step = 'detail_text';
-          camera_time = 1;
+          // console.log("lon---",lon);
+          // lon = Math.ceil(lon);
+          let interval = (90 - lon)/10;
+          //console.log("interval",interval);
+          let tmp_timer = setInterval(()=>{
+            if(lon == 90){
+              clearInterval(tmp_timer);
+              camera_time = 1;
+              useTarget = false;
+            }
+            else{
+              if(interval>0&&lon>90){
+                if(lon - interval<90){
+                  lon = 90
+                }
+                else{
+                  lon = lon - interval;
+                }
+              }
+              else if(interval>0&&lon<90){
+                if(lon + interval>90){
+                  lon = 90;
+                }
+                else{
+                  lon = lon + interval;
+                }
+              }
+              else if(interval<0&&lon>90){
+                if(lon + interval<90){
+                  lon = 90
+                }
+                else{
+                  lon = lon + interval;
+                }
+              }
+              else if(interval<0&&lon<90){
+                if(lon - interval>90){
+                  lon = 90
+                }
+                else{
+                  lon = lon - interval;
+                }
+              }
+            }
+          },100);
+          //camera_time = 1;
         }
       }
       isUserInteracting = true;
@@ -173,18 +237,9 @@
         lon = (onPointerDownPointerX - event.clientX) * 0.1 + onPointerDownLon;
         lat = (event.clientY - onPointerDownPointerY) * 0.1 + onPointerDownLat;
       }
-      // console.log("camera.target",camera.target);
-      //console.log("lon",lon);
-      // console.log(lon%360);
       let tmplon = ((lon-90)%360)/180;
-      //console.log("tmplon",tmplon);
+      // console.log("tmplon",tmplon);
       activeRotate = Math.PI*tmplon;//Math.PI 180deg
-      //activeRotate = lon-90>0? 0 - Math.PI*tmplon : Math.PI*tmplon;
-      // activeRotate =  Math.PI;
-      // // activeRotate = Math.PI*tmplon/360;
-      // activeRotate = lon-360;
-      //console.log("activeRotate",activeRotate);
-      // loadActivePoint('stories');
 
       for (let i = scene.children.length - 1; i >= 0; i--) {
         if(scene.children[i].name&&scene.children[i].name=='between_the_world_and_us'){
@@ -203,15 +258,6 @@
 
     function onDocumentMouseUp(event) {
       isUserInteracting = false;
-      // console.log("scene===",scene);
-      // for (let i = scene.children.length - 1; i >= 0; i--) {
-      //   if(scene.children[i].name&&scene.children[i].name=='between_the_world_and_us'){
-      //     console.log("scene.children[i]",scene.children[i]);
-      //     // scene.children[i].center = new THREE.Vector2(1, 1);
-      //     //scene.children[i].rotation.set(0,activeRotate,0);
-      //     scene.children[i].material.rotation = 0-activeRotate;
-      //   }
-      // }
     }
 
     function onDocumentMouseWheel(event) {
@@ -229,9 +275,12 @@
 
     //捕捉鼠标
     function update() {
-      // console.log("useTarget",useTarget);
+      // console.log("lon",lon);
+      lon = Math.ceil(lon);
+      // console.log("useTarget===",useTarget);
+      // console.log("camera_time",camera_time);
+      // console.log("camera.fov",camera.fov);
       if(camera_time==0&&camera.fov==90&&useTarget){
-        // console.log("useTarget===",useTarget);
         lat = Math.max(- 85, Math.min(85, lat));
         phi = THREE.Math.degToRad(90 - lat);
         theta = THREE.Math.degToRad(lon);
@@ -241,11 +290,37 @@
       }
       if (camera_time > 0 && camera_time < 30) {
         if(canvas_step=='detail_text'){
-          camera.target.x = 4;
-          camera.target.y = -39;
-          camera.target.z = 498;
+          //console.log("mesh.position",mesh.position);
+          // mesh.position.y = -160;
+          // mesh.position.z = -160;
+          let tmp_timer = setInterval(()=>{
+            if(mesh.position.z == -160){
+              clearInterval(tmp_timer);
+            }
+            else{
+              mesh.position.z = mesh.position.z - 10;
+            }
+          },100);
+
+          // mesh.material
+          // camera.target.z = 0;
+          // console.log("lon",lon);
+          // camera.target.x = 4;
+          // camera.target.y = 0;
+          // camera.target.z = 500;
+          // console.log("camera.target",camera.target);
         }
-        camera.fov -= 1;
+        //camera.fov -= 1;
+        // lat = 0;
+        // let tmp_timer = setInterval(()=>{
+        //   if(mesh.position.z == 0){
+        //     clearInterval(tmp_timer);
+        //   }
+        //   else{
+        //     mesh.position.z = mesh.position.z + 30;
+        //     lon = lon - 1;
+        //   }
+        // },100);
         camera.updateProjectionMatrix();
         camera_time++;
       } else if (camera_time === 30) {
@@ -255,10 +330,33 @@
           camera.fov = 90;
           camera.updateProjectionMatrix();
         }
+        else{
+          backbtn.classList.remove('hide');
+        }
         if(canvas_step=='stories_people'){
+          // room3_side.map.center = new THREE.Vector2(1,1);
+          // room3_side.map.offset = new THREE.Vector2(10,0);
+          // room3_side.rotation = new THREE.Vector3(-30,-30,-30);
+          
           mesh.material = room3_side;
+          // mesh.position.set(0,0,-200);
+          // mesh.position.set(0,0,-1);
+          mesh.position.x = 100;
+          mesh.position.z = -450;
+          console.log("mesh",mesh);
           loadMarker('people');
           //这里改变 camera.target 无效 因为上面会修改过来
+          lon = -102;
+          // lat = 0;
+          // let tmp_timer = setInterval(()=>{
+          //   if(mesh.position.z == 0){
+          //     clearInterval(tmp_timer);
+          //   }
+          //   else{
+          //     mesh.position.z = mesh.position.z + 30;
+          //     lon = lon - 1;
+          //   }
+          // },100);
         }
         else if(canvas_step=='stories_spaces'){
           mesh.material = room2_side;
@@ -301,8 +399,10 @@
         { name: 'stories_people_text',type:'stories', scale:16, x: 44, y:1, z: -20 },
         { name: 'stories_spaces_text',type:'stories', scale:9, x: -21, y:1, z: -20 },
         { name: 'between_the_world_and_us',type:'stories', scale: 2, x: 0, y: -16, z: 20 },
-        { name: 'people_stories_text',type:'people', scale: 10, x: -21, y: 1, z: 20 },
-        { name: 'people_hope_text',type:'people', scale: 6, x: -6, y: 0, z: 20 },
+        // { name: 'people_stories_text',type:'people', scale: 10, x: -21, y: 1, z: 20 },
+        // { name: 'people_hope_text',type:'people', scale: 6, x: -6, y: 0, z: 20 },
+        { name: 'people_stories_text',type:'people', scale: 6, x: -6, y: 0, z: 20 },
+        { name: 'people_hope_text',type:'people',scale: 10, x: -21, y: 1, z: 20 },
         { name: 'spaces_stories_text',type:'spaces', scale:6, x: -7, y:1, z: -20 },
         { name: 'spaces_hope_text',type:'spaces', scale:16, x:-36, y:1, z:20 },
         { name: 'hope_people_text',type:'hope', scale: 10, x: -18, y: 1, z: 20 },
@@ -352,7 +452,15 @@
           pointTexture = new THREE.TextureLoader().load('./assets/images/icon-zoom.png');
         }
         var pointMaterial = new THREE.SpriteMaterial({ map: pointTexture });
-        let point = new THREE.Sprite(pointMaterial);
+        var point = new THREE.Sprite(pointMaterial);
+        
+        if(item.name=='between_the_world_and_us'){
+          pointMaterial = new THREE.MeshBasicMaterial({ map: pointTexture,side: THREE.DoubleSide, transparent: true});
+          point = new THREE.Mesh(
+            new THREE.PlaneGeometry(1,1),
+            pointMaterial
+          );
+        }
         point.name = item.name;
         //
         point.scale.set(item.scale, item.scale, item.scale);
