@@ -10,12 +10,29 @@
 </head>
 <body>
   <div id="container"></div>
-  <div id="backbtn" class="hide">Return</div>
+  <!-- <div id="backbtn" class="hide">Return</div> -->
+  <div class="art-detail hide" id="art_detail">
+    <div class="modal-bg"></div>
+    <div class="modal-content">
+      <div class="back_btn" id="backbtn"></div>
+      <div class="content-box">
+        <div class="art-detail-left">
+          <div class="art-detail-left-tit">OUR WONDERFUL, FANTASTIC ECLECTIC</div>
+          <div class="art-detail-left-desc">Our Wonderful, Fantastic Eclectic is a series of fantastical headpieces inspired by the world around us, from the wonders of our local food and culture to the COVID-19 pandemic.</div>
+        </div>
+        <div class="art-detail-right">
+          <div class="art-detail-right-img"></div>
+          <div class="art-detail-right-desc">Our Wonderful, Fantastic Eclectic is a series of fantastical headpieces inspired by the world around us, from the wonders of our local food and culture to the COVID-19 pandemic.</div>
+        </div>
+      </div>
+    </div>
+  </div>
+  <video id="memories0" playsinline webkit-playsinline muted loop autoplay width="1290" height="1040" src="./assets/video/memories-0.mp4" style="display:none;"></video>
   <script type="text/javascript">
     var camera, scene, renderer, light;
     var raycaster = new THREE.Raycaster();
     var mouse = new THREE.Vector2();
-    var isUserInteracting = false, onMouseDownMouseX = 0, onMouseDownMouseY = 0, lon = 0, onMouseDownLon = 0, lat = 0, onMouseDownLat = 0, phi = 0, theta = 0;
+    var isUserInteracting = false, onMouseDownMouseX = 0, onMouseDownMouseY = 0, lon = 90, onMouseDownLon = 0, lat = 0, onMouseDownLat = 0, phi = 0, theta = 0;
     // 球体网格
     var geometry;
     // 四个全景图
@@ -34,28 +51,37 @@
     var people_room_text_tips = [];//room3 finished
     var hope_room_text_tips = [];//room4 finished
 
+    var target_lon;
+
+    var art_detail = document.getElementById("art_detail");
+
     var backbtn = document.getElementById("backbtn");
+    console.log("backbtn",backbtn);
 
     backbtn.addEventListener("click",()=>{
       camera_time = 0;
-      camera.fov = 90;
+      camera.fov = 75;
       useTarget = true;
-      camera.updateProjectionMatrix();
-      backbtn.classList.add("hide");
-      // if(camera.fov!=90){
-      //   console.log("useTarget",useTarget);
-      //   useTarget = true;
-      //   camera.fov = 90;
-      //   camera.updateProjectionMatrix();
-      // }
+      art_detail.classList.add("hide");
     })
+    // function hideModal(){
+    //   art_detail.classList.add("hide");
+    // }
+
     init();
     animate();
+    playVideo();
+    function sphereBackground(imageSource){
+      let backgroundImage = new THREE.TextureLoader().load(imageSource);
+      backgroundImage.mapping = THREE.EquirectangularReflectionMapping;
+      backgroundMap = new THREE.MeshBasicMaterial({map: backgroundImage});
+      return backgroundMap;
+    }
     function init() {
       var container;
       container = document.getElementById('container');
       // 摄像机
-      camera = new THREE.PerspectiveCamera(90, window.innerWidth / window.innerHeight, 1, 1100);
+      camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 1, 1100);
       camera.target = new THREE.Vector3(0, 0, 0);
       scene = new THREE.Scene();
       // 添加灯光
@@ -66,14 +92,16 @@
       light.position.set(0, 40, -10);
       scene.add(light);
       // 全景场景
-      geometry = new THREE.SphereGeometry(500, 60, 60);
+      geometry = new THREE.SphereGeometry(700, 60, 60);
+      //geometry = new THREE.SphereGeometry(700, 60, 80, Math.PI / 2.9);
       // 按z轴翻转
       geometry.scale(1, 1, -1);
       // 添加贴图
-      room1_side = new THREE.MeshBasicMaterial({
-        //文小芳
-        map: new THREE.TextureLoader().load('./assets/images/room-1.jpg')
-      });
+      room1_side = sphereBackground('./assets/images/room-1.jpg');
+      // room1_side = new THREE.MeshBasicMaterial({
+      //   //文小芳
+      //   map: new THREE.TextureLoader().load('./assets/images/room-1.jpg')
+      // });
       room2_side = new THREE.MeshBasicMaterial({
         map: new THREE.TextureLoader().load('./assets/images/room-2.jpg')
       });
@@ -110,6 +138,7 @@
 
     // 鼠标控制
     function onDocumentMouseDown(event) {
+      console.log("target_lon",lon);
       // if(camera.fov!=90){
       //   console.log("useTarget",useTarget);
       //   useTarget = true;
@@ -165,46 +194,78 @@
           camera_time = 1;
           canvas_step = 'hope_spaces';
         }
-        else if(name=='between_the_world_and_us'){
+        else if(name=='icon_search'){
+          canvas_step = 'art_detail';
+          camera_time = 0;
+          // camera.fov = 75;
+          useTarget = false;
+          // camera.updateProjectionMatrix();
+          art_detail.classList.remove("hide");
+      // if(camera.fov!=90){
+      //   console.log("useTarget",useTarget);
+      //   useTarget = true;
+      //   camera.fov = 90;
+      //   camera.updateProjectionMatrix();
+      // }
+        }
+        else if (name.indexOf('between_the_world_and_us'>-1)){
           canvas_step = 'detail_text';
-          // console.log("lon---",lon);
-          // lon = Math.ceil(lon);
-          let interval = (90 - lon)/10;
-          //console.log("interval",interval);
-          let tmp_timer = setInterval(()=>{
-            if(lon == 90){
-              clearInterval(tmp_timer);
-              camera_time = 1;
-              useTarget = false;
+          if(name=='between_the_world_and_us1'){
+            target_lon = 90;
+          }
+          else if(name=='between_the_world_and_us2'){
+            target_lon = 270;
+          }
+          else if(name=='between_the_world_and_us3'){
+            if(lon<0){
+              target_lon = 360;
             }
             else{
-              if(interval>0&&lon>90){
-                if(lon - interval<90){
-                  lon = 90
+              target_lon = 0;
+            }
+          }
+          else if(name=='between_the_world_and_us4'){
+            target_lon = 180;
+          }
+          if(lon<0){
+            lon = 360+lon;
+          }
+          let interval = (target_lon - lon)/10;
+          //console.log("interval",interval);
+          let tmp_timer = setInterval(()=>{
+            if(lon == target_lon){
+              clearInterval(tmp_timer);
+              camera_time = 1;
+              // useTarget = false;
+            }
+            else{
+              if(interval>0&&lon>target_lon){
+                if(lon - interval<target_lon){
+                  lon = target_lon
                 }
                 else{
                   lon = lon - interval;
                 }
               }
-              else if(interval>0&&lon<90){
-                if(lon + interval>90){
-                  lon = 90;
+              else if(interval>0&&lon<target_lon){
+                if(lon + interval>target_lon){
+                  lon = target_lon;
                 }
                 else{
                   lon = lon + interval;
                 }
               }
-              else if(interval<0&&lon>90){
-                if(lon + interval<90){
-                  lon = 90
+              else if(interval<0&&lon>target_lon){
+                if(lon + interval<target_lon){
+                  lon = target_lon
                 }
                 else{
                   lon = lon + interval;
                 }
               }
-              else if(interval<0&&lon<90){
-                if(lon - interval>90){
-                  lon = 90
+              else if(interval<0&&lon<target_lon){
+                if(lon - interval>target_lon){
+                  lon = target_lon
                 }
                 else{
                   lon = lon - interval;
@@ -212,8 +273,56 @@
               }
             }
           },100);
-          //camera_time = 1;
         }
+        // else if(name=='between_the_world_and_us1'){
+        //   canvas_step = 'detail_text';
+        //   console.log("lon---",lon);
+        //   // lon = Math.ceil(lon);
+        //   let interval = (90 - lon)/10;
+        //   //console.log("interval",interval);
+        //   let tmp_timer = setInterval(()=>{
+        //     if(lon == 90){
+        //       clearInterval(tmp_timer);
+        //       camera_time = 1;
+        //       // useTarget = false;
+        //     }
+        //     else{
+        //       if(interval>0&&lon>90){
+        //         if(lon - interval<90){
+        //           lon = 90
+        //         }
+        //         else{
+        //           lon = lon - interval;
+        //         }
+        //       }
+        //       else if(interval>0&&lon<90){
+        //         if(lon + interval>90){
+        //           lon = 90;
+        //         }
+        //         else{
+        //           lon = lon + interval;
+        //         }
+        //       }
+        //       else if(interval<0&&lon>90){
+        //         if(lon + interval<90){
+        //           lon = 90
+        //         }
+        //         else{
+        //           lon = lon + interval;
+        //         }
+        //       }
+        //       else if(interval<0&&lon<90){
+        //         if(lon - interval>90){
+        //           lon = 90
+        //         }
+        //         else{
+        //           lon = lon - interval;
+        //         }
+        //       }
+        //     }
+        //   },100);
+        //   //camera_time = 1;
+        // }
       }
       isUserInteracting = true;
       onPointerDownPointerX = event.clientX;
@@ -242,7 +351,7 @@
       activeRotate = Math.PI*tmplon;//Math.PI 180deg
 
       for (let i = scene.children.length - 1; i >= 0; i--) {
-        if(scene.children[i].name&&scene.children[i].name=='between_the_world_and_us'){
+        if(scene.children[i].name&&scene.children[i].name=='between_the_world_and_us1'){
           //console.log("scene.children[i]",scene.children[i]);
           scene.children[i].material.rotation = activeRotate;
         }
@@ -275,26 +384,28 @@
 
     //捕捉鼠标
     function update() {
-      // console.log("lon",lon);
+      console.log("lon",lon);
       lon = Math.ceil(lon);
       // console.log("useTarget===",useTarget);
       // console.log("camera_time",camera_time);
       // console.log("camera.fov",camera.fov);
-      if(camera_time==0&&camera.fov==90&&useTarget){
+      if(camera_time==0&&camera.fov==75&&useTarget){
         lat = Math.max(- 85, Math.min(85, lat));
         phi = THREE.Math.degToRad(90 - lat);
         theta = THREE.Math.degToRad(lon);
-        camera.target.x = 500 * Math.sin(phi) * Math.cos(theta);
-        camera.target.y = 500 * Math.cos(phi);
-        camera.target.z = 500 * Math.sin(phi) * Math.sin(theta);
+        camera.target.x = 700 * Math.sin(phi) * Math.cos(theta);
+        camera.target.y = 700 * Math.cos(phi);
+        camera.target.z = 700 * Math.sin(phi) * Math.sin(theta);
       }
       if (camera_time > 0 && camera_time < 30) {
         if(canvas_step=='detail_text'){
           //console.log("mesh.position",mesh.position);
           // mesh.position.y = -160;
           // mesh.position.z = -160;
+
           let tmp_timer = setInterval(()=>{
-            if(mesh.position.z == -160){
+            if(mesh.position.z == -100){
+              // loadMarker('people');
               clearInterval(tmp_timer);
             }
             else{
@@ -327,11 +438,11 @@
         camera_time = 0;
         if(canvas_step!='detail_text'){
           camera_time = 0;
-          camera.fov = 90;
+          camera.fov = 75;
           camera.updateProjectionMatrix();
         }
         else{
-          backbtn.classList.remove('hide');
+          //backbtn.classList.remove('hide');
         }
         if(canvas_step=='stories_people'){
           // room3_side.map.center = new THREE.Vector2(1,1);
@@ -342,9 +453,10 @@
           // mesh.position.set(0,0,-200);
           // mesh.position.set(0,0,-1);
           mesh.position.x = 100;
-          mesh.position.z = -450;
+          // mesh.position.z = -450;
+          mesh.position.z = -400;
           console.log("mesh",mesh);
-          loadMarker('people');
+          // loadMarker('people');
           //这里改变 camera.target 无效 因为上面会修改过来
           lon = -102;
           // lat = 0;
@@ -398,7 +510,11 @@
       var interactPoints = [
         { name: 'stories_people_text',type:'stories', scale:16, x: 44, y:1, z: -20 },
         { name: 'stories_spaces_text',type:'stories', scale:9, x: -21, y:1, z: -20 },
-        { name: 'between_the_world_and_us',type:'stories', scale: 2, x: 0, y: -16, z: 20 },
+        { name: 'between_the_world_and_us1',type:'stories', scale: 2, x: 0, y:-16, z: 20,rotate:{x:0,y:0,z:0} },
+        { name: 'between_the_world_and_us2',type:'stories', scale: 2, x: 0, y:-16, z: -20,rotate:{x:0,y:0,z:0} },
+        { name: 'between_the_world_and_us3',type:'stories', scale: 2, x: 20, y:-20, z:0,rotate:{x:0 - Math.PI/2,y:Math.PI / 2,z:Math.PI / 2} },
+        { name: 'between_the_world_and_us4',type:'stories', scale: 2, x: -30, y:-16, z:0,rotate:{x:0 - Math.PI/2,y:Math.PI / 2,z:Math.PI / 2} },
+        { name: 'icon_search',type:'stories', scale: 4, x: 50, y: -12, z: 40 },
         // { name: 'people_stories_text',type:'people', scale: 10, x: -21, y: 1, z: 20 },
         // { name: 'people_hope_text',type:'people', scale: 6, x: -6, y: 0, z: 20 },
         { name: 'people_stories_text',type:'people', scale: 6, x: -6, y: 0, z: 20 },
@@ -448,27 +564,87 @@
         else if(item.name=='hope_spaces_text'){
           pointTexture = new THREE.TextureLoader().load('./assets/images/icon-text-spaces.png');
         }
+        else if(item.name=='icon_search'){
+          pointTexture = new THREE.TextureLoader().load('./assets/images/icon-search.png');
+        }
         else{
           pointTexture = new THREE.TextureLoader().load('./assets/images/icon-zoom.png');
         }
         var pointMaterial = new THREE.SpriteMaterial({ map: pointTexture });
         var point = new THREE.Sprite(pointMaterial);
-        
-        if(item.name=='between_the_world_and_us'){
+        // if(item.name.indexOf('between_the_world_and_us')>-1||item.name=='icon_search'){
+        //   pointMaterial = new THREE.MeshBasicMaterial({ map: pointTexture,side: THREE.DoubleSide, transparent: true});
+        //   point = new THREE.Mesh(
+        //     new THREE.PlaneGeometry(1,1),
+        //     pointMaterial
+        //   );
+        // }
+        if(item.name.indexOf('between_the_world_and_us')>-1){
           pointMaterial = new THREE.MeshBasicMaterial({ map: pointTexture,side: THREE.DoubleSide, transparent: true});
           point = new THREE.Mesh(
             new THREE.PlaneGeometry(1,1),
             pointMaterial
           );
         }
+        // if(item.name=='between_the_world_and_us1'||item.name=='between_the_world_and_us2'){
+        //   pointMaterial = new THREE.MeshBasicMaterial({ map: pointTexture,side: THREE.DoubleSide, transparent: true});
+        //   point = new THREE.Mesh(
+        //     new THREE.PlaneGeometry(1,1),
+        //     pointMaterial
+        //   );
+        // }
+        // if(item.name=='between_the_world_and_us3'||item.name=='between_the_world_and_us4'){
+        //   pointMaterial = new THREE.MeshBasicMaterial({ map: pointTexture,side: THREE.FrontSide, transparent: true});
+        //   point = new THREE.Mesh(
+        //     new THREE.PlaneGeometry(1,1),
+        //     pointMaterial
+        //   );
+        // }
         point.name = item.name;
         //
+        //console.log(mesh.position);
+        // let tmpZ = item.z-(mesh.position.z/350)*item.z;
+        // tmpZ = item.z;
+        // console.log(tmpZ);
         point.scale.set(item.scale, item.scale, item.scale);
-        point.position.set(item.x, item.y, item.z);
+        point.position.set(item.x, item.y,item.z);
+        if(item.rotate&&item.rotate.x){
+          point.rotateX(item.rotate.x);
+        }
+        if(item.rotate&&item.rotate.y){
+          point.rotateY(item.rotate.y);
+        }
+        if(item.rotate&&item.rotate.z){
+          point.rotateZ(item.rotate.z);
+        }
         interactMeshes.push(point);
         scene.add(point);
       });
     }
+
+    //放置视频
+    function playVideo(){
+      document.getElementById('memories0').play();
+      var memoriesVidoSrc = document.getElementById("memories0");
+      const memoriesVidMap = new THREE.VideoTexture(memoriesVidoSrc);
+      memoriesVidMap.minFilter = THREE.LinearFilter;
+      memoriesVidMap.magFilter = THREE.LinearFilter;
+      const memoriesVideo = artworkCloner(20, 11, memoriesVidMap);
+      // memoriesVideo.rotateY(Math.PI * 0.6);
+      memoriesVideo.position.set(-12.8, -4, 40);
+      memoriesVideo.scale.set(0.76,0.8,0.8);
+      memoriesVideo.name = "memoriesVideo";
+      scene.add(memoriesVideo)
+    }
+
+    //Function used to create a artwork plane
+    function artworkCloner(scale1, scale2, mapMaterial){
+        var customPlane = new THREE.Mesh(
+          new THREE.PlaneGeometry(scale1, scale2),
+          new THREE.MeshBasicMaterial({ map: mapMaterial, side: THREE.DoubleSide, color: 0xff0000, transparent: true, opacity: 0.8})
+        );
+        return customPlane;
+      }
   </script>
 </body>
 </html>
